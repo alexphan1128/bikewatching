@@ -152,6 +152,7 @@ map.on('load', async () => {
 
   // Step 3.3: circles on the SVG overlay
   const svg = d3.select('#map').select('svg');
+  const tooltip = document.getElementById('tooltip');
 
   const circles = svg
     .selectAll('circle')
@@ -160,11 +161,18 @@ map.on('load', async () => {
     .append('circle')
     .attr('r', (d) => radiusScale(d.totalTraffic))
     .style('--departure-ratio', (d) => departureRatio(d))
-    .each(function (d) {
-      // Step 4.4: tooltip
-      d3.select(this)
-        .append('title')
-        .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+    // Step 4.4: tooltip (custom HTML tooltip so it shows instantly on hover)
+    .on('mouseenter mousemove', (event, d) => {
+      tooltip.hidden = false;
+      tooltip.innerHTML =
+        `<strong>${d.name}</strong><br>` +
+        `${d.totalTraffic} trips<br>` +
+        `${d.departures} departures · ${d.arrivals} arrivals`;
+      tooltip.style.left = `${event.clientX + 14}px`;
+      tooltip.style.top = `${event.clientY + 14}px`;
+    })
+    .on('mouseleave', () => {
+      tooltip.hidden = true;
     });
 
   function updatePositions() {
@@ -195,9 +203,7 @@ map.on('load', async () => {
       .data(filteredStations, (d) => d.short_name)
       .join('circle')
       .attr('r', (d) => radiusScale(d.totalTraffic))
-      .style('--departure-ratio', (d) => departureRatio(d))
-      .select('title')
-      .text((d) => `${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+      .style('--departure-ratio', (d) => departureRatio(d));
   }
 
   function updateTimeDisplay() {
